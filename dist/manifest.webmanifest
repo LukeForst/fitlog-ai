@@ -1,0 +1,10 @@
+{
+  "name": "练记 AI",
+  "short_name": "练记 AI",
+  "description": "训练、饮食和 AI 教练",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#071614",
+  "theme_color": "#071614",
+  "icons": [{ "src": "icon.png", "sizes": "1024x1024", "type": "image/png", "purpose": "any maskable" }]
+}
