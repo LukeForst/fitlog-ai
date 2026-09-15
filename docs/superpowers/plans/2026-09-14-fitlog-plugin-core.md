@@ -78,7 +78,7 @@ Expected: failure because the test command or fitlog MCP declaration is missing.
 
 - [ ] **Step 4: Add minimal configuration.**
 
-Set scripts to npm test = node --test tests/*.test.mjs, npm run test:ts = tsx --test tests/*.test.ts, npm run check = tsc --noEmit, npm run build = vite build, and npm run start = tsx src/index.ts. Set .mcp.json with one HTTP server named fitlog at the endpoint above. Set the manifest name to fitlog-ai with a Chinese description and reference .mcp.json. Do not create a marketplace entry.
+Set scripts to npm test = node --test tests/*.test.mjs, npm run test:ts = node --test tests/*.test.ts, npm run check = tsc --noEmit, npm run build = vite build, and npm run start = tsx src/index.ts. Set .mcp.json with one HTTP server named fitlog at the endpoint above. Set the manifest name to fitlog-ai with a Chinese description and reference .mcp.json. Do not create a marketplace entry.
 
 - [ ] **Step 5: Verify green and commit.**
 
@@ -133,7 +133,7 @@ Create tests/domain.test.ts:
 
 - [ ] **Step 2: Verify red.**
 
-Run: npm run test:one -- tests/domain.test.ts
+Run: node --test tests/domain.test.ts
 
 Expected: module-not-found failure for the domain module.
 
@@ -145,7 +145,7 @@ Use zod for ISO date, non-empty title/action name, weightKg >= 0, integer reps >
 
 Run:
 
-    npm run test:one -- tests/domain.test.ts
+    node --test tests/domain.test.ts
     npm run check
     git add plugins/fitlog-ai/src/domain plugins/fitlog-ai/tests/domain.test.ts plugins/fitlog-ai/package.json
     git commit -m "feat: validate FitLog training and meal data"
@@ -184,7 +184,7 @@ Create tests/sqlite-repository.test.ts:
 
 - [ ] **Step 2: Verify red.**
 
-Run: npm run test:one -- tests/sqlite-repository.test.ts
+Run: node --test tests/sqlite-repository.test.ts
 
 Expected: module-not-found failure for sqlite-repository.
 
@@ -196,7 +196,7 @@ Use Node's built-in node:sqlite module with foreign keys on. Initialize users, w
 
 Run:
 
-    npm run test:one -- tests/sqlite-repository.test.ts
+    node --test tests/sqlite-repository.test.ts
     npm test
     npm run check
     git add plugins/fitlog-ai/src/storage plugins/fitlog-ai/tests/sqlite-repository.test.ts plugins/fitlog-ai/package.json
@@ -222,7 +222,7 @@ Using a real in-memory SQLite repository, assert recordWorkout returns its saved
 
 - [ ] **Step 2: Verify red.**
 
-Run: npm run test:one -- tests/record-service.test.ts
+Run: node --test tests/record-service.test.ts
 
 Expected: missing export failure for record-service.
 
@@ -238,8 +238,8 @@ Create dashboard-service.test.ts with two workout days, one meal, and one measur
 
 Run:
 
-    npm run test:one -- tests/record-service.test.ts
-    npm run test:one -- tests/dashboard-service.test.ts
+    node --test tests/record-service.test.ts
+    node --test tests/dashboard-service.test.ts
     npm test
     npm run check
     git add plugins/fitlog-ai/src/services plugins/fitlog-ai/tests/record-service.test.ts plugins/fitlog-ai/tests/dashboard-service.test.ts
@@ -265,7 +265,7 @@ Instantiate the real server with me@example.com and in-memory SQLite. Invoke log
 
 - [ ] **Step 2: Verify red.**
 
-Run: npm run test:one -- tests/mcp-tools.test.ts
+Run: node --test tests/mcp-tools.test.ts
 
 Expected: createFitlogServer missing-export failure.
 
@@ -277,7 +277,7 @@ Use explicit zod tool schemas. Every handler passes the server-held owner email 
 
 Run:
 
-    npm run test:one -- tests/mcp-tools.test.ts
+    node --test tests/mcp-tools.test.ts
     npm test
     npm run check
     git add plugins/fitlog-ai/src/mcp plugins/fitlog-ai/tests/mcp-tools.test.ts
@@ -317,7 +317,7 @@ Create tests/dashboard-model.test.ts:
 
 - [ ] **Step 2: Verify red.**
 
-Run: npm run test:one -- tests/dashboard-model.test.ts
+Run: node --test tests/dashboard-model.test.ts
 
 Expected: module-not-found failure for dashboard-model.
 
@@ -329,7 +329,7 @@ Format labels in dashboard-model before any DOM operation. The renderer listens 
 
 Configure Vite to emit one HTML widget. In server.ts register ui://fitlog/dashboard with MIME type text/html;profile=mcp-app. Run:
 
-    npm run test:one -- tests/dashboard-model.test.ts
+    node --test tests/dashboard-model.test.ts
     npm test
     npm run check
     npm run build
@@ -362,7 +362,7 @@ Create a repository with one audit event from 2026-08-01 and one from 2026-09-13
 
 - [ ] **Step 2: Verify red.**
 
-Run: npm run test:one -- tests/retention-service.test.ts
+Run: node --test tests/retention-service.test.ts
 
 Expected: module-not-found failure for retention-service.
 
