@@ -8,7 +8,7 @@
     "test:ts": "node --test tests/*.test.ts",
     "check": "tsc --noEmit",
     "build": "vite build",
-    "start": "tsx src/index.ts"
+    "start": "node src/index.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",

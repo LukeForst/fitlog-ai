@@ -40,6 +40,8 @@ export interface FitLogRepository {
   listMeasurements(ownerEmail: string, from: string, to: string): StoredBodyMeasurement[];
   listMemoryFacts(ownerEmail: string): StoredMemoryFact[];
   deleteMemoryFact(ownerEmail: string, id: string): boolean;
-  writeAuditEvent(ownerEmail: string, action: string, metadata?: Record<string, unknown>): void;
+  writeAuditEvent(ownerEmail: string, action: string, metadata?: Record<string, unknown>, createdAt?: string): void;
+  purgeAuditEventsBefore(ownerEmail: string, cutoff: string): number;
+  countAuditEvents(ownerEmail: string): number;
   close(): void;
 }

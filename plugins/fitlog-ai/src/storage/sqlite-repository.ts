@@ -159,11 +159,34 @@ class SqliteRepository implements FitLogRepository {
     return result.changes > 0;
   }
 
-  writeAuditEvent(ownerEmail: string, action: string, metadata: Record<string, unknown> = {}): void {
+  writeAuditEvent(ownerEmail: string, action: string, metadata: Record<string, unknown> = {}, createdAt = new Date().toISOString()): void {
     this.assertAuthorized(ownerEmail);
     this.database.prepare(
       "INSERT INTO audit_events (id, owner_id, action, metadata_json, created_at) VALUES (?, ?, ?, ?, ?)"
-    ).run(randomUUID(), OWNER_ID, action, JSON.stringify(metadata), new Date().toISOString());
+    ).run(randomUUID(), OWNER_ID, action, JSON.stringify(metadata), createdAt);
+  }
+
+  purgeAuditEventsBefore(ownerEmail: string, cutoff: string): number {
+    this.assertAuthorized(ownerEmail);
+    this.database.exec("BEGIN IMMEDIATE");
+    try {
+      const result = this.database.prepare(
+        "DELETE FROM audit_events WHERE owner_id = ? AND created_at < ?"
+      ).run(OWNER_ID, cutoff);
+      this.database.exec("COMMIT");
+      return Number(result.changes);
+    } catch (error) {
+      this.database.exec("ROLLBACK");
+      throw error;
+    }
+  }
+
+  countAuditEvents(ownerEmail: string): number {
+    this.assertAuthorized(ownerEmail);
+    const result = this.database.prepare(
+      "SELECT COUNT(*) AS count FROM audit_events WHERE owner_id = ?"
+    ).get(OWNER_ID) as unknown as { count: number };
+    return result.count;
   }
 
   close(): void {
