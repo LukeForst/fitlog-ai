@@ -51,3 +51,7 @@ export interface FitLogRepository {
   countAuditEvents(owner: OwnerContext): Promise<number>;
   close(): Promise<void>;
 }
+
+export interface RepositoryFactory {
+  forOwner(owner: OwnerContext): FitLogRepository;
+}

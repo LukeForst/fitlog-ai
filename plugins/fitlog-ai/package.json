@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
+    "@supabase/supabase-js": "^2.116.0",
     "zod": "^3.0.0"
   },
   "devDependencies": {
