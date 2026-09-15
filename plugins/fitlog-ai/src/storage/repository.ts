@@ -1,5 +1,11 @@
 import type { MealInput, WorkoutInput } from "../domain/types.ts";
 
+export interface OwnerContext {
+  id: string;
+  email: string;
+  accessToken?: string;
+}
+
 export interface BodyMeasurementInput {
   date: string;
   weightKg: number;
@@ -31,17 +37,17 @@ export interface StoredMemoryFact extends MemoryFactInput {
 }
 
 export interface FitLogRepository {
-  saveWorkout(ownerEmail: string, workout: WorkoutInput): string;
-  saveMeal(ownerEmail: string, meal: MealInput): string;
-  saveBodyMeasurement(ownerEmail: string, measurement: BodyMeasurementInput): string;
-  saveMemoryFact(ownerEmail: string, fact: MemoryFactInput): string;
-  listWorkouts(ownerEmail: string, from: string, to: string): StoredWorkout[];
-  listMeals(ownerEmail: string, from: string, to: string): StoredMeal[];
-  listMeasurements(ownerEmail: string, from: string, to: string): StoredBodyMeasurement[];
-  listMemoryFacts(ownerEmail: string): StoredMemoryFact[];
-  deleteMemoryFact(ownerEmail: string, id: string): boolean;
-  writeAuditEvent(ownerEmail: string, action: string, metadata?: Record<string, unknown>, createdAt?: string): void;
-  purgeAuditEventsBefore(ownerEmail: string, cutoff: string): number;
-  countAuditEvents(ownerEmail: string): number;
-  close(): void;
+  saveWorkout(owner: OwnerContext, workout: WorkoutInput): Promise<string>;
+  saveMeal(owner: OwnerContext, meal: MealInput): Promise<string>;
+  saveBodyMeasurement(owner: OwnerContext, measurement: BodyMeasurementInput): Promise<string>;
+  saveMemoryFact(owner: OwnerContext, fact: MemoryFactInput): Promise<string>;
+  listWorkouts(owner: OwnerContext, from: string, to: string): Promise<StoredWorkout[]>;
+  listMeals(owner: OwnerContext, from: string, to: string): Promise<StoredMeal[]>;
+  listMeasurements(owner: OwnerContext, from: string, to: string): Promise<StoredBodyMeasurement[]>;
+  listMemoryFacts(owner: OwnerContext): Promise<StoredMemoryFact[]>;
+  deleteMemoryFact(owner: OwnerContext, id: string): Promise<boolean>;
+  writeAuditEvent(owner: OwnerContext, action: string, metadata?: Record<string, unknown>, createdAt?: string): Promise<void>;
+  purgeAuditEventsBefore(owner: OwnerContext, cutoff: string): Promise<number>;
+  countAuditEvents(owner: OwnerContext): Promise<number>;
+  close(): Promise<void>;
 }

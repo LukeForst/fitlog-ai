@@ -13,7 +13,8 @@ if (!ownerEmail || !databasePath) {
 }
 
 const repository = createSqliteRepository(databasePath, ownerEmail);
-runRetention(repository, new Date(), ownerEmail);
+const owner = { id: "fitlog-owner", email: ownerEmail };
+await runRetention(repository, owner, new Date());
 
 const mcpServer = createFitlogServer({ ownerEmail, repository });
 const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });

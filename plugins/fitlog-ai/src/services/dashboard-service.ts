@@ -1,6 +1,6 @@
 import { sumNutrition } from "../domain/calculations.ts";
 import type { NutritionTotals } from "../domain/types.ts";
-import type { FitLogRepository, StoredBodyMeasurement, StoredWorkout } from "../storage/repository.ts";
+import type { FitLogRepository, OwnerContext, StoredBodyMeasurement, StoredWorkout } from "../storage/repository.ts";
 
 export interface DashboardRange {
   from: string;
@@ -24,15 +24,17 @@ export interface Dashboard {
 }
 
 export interface DashboardService {
-  getDashboard(ownerEmail: string, range: DashboardRange, exerciseName?: string): Dashboard;
+  getDashboard(owner: OwnerContext, range: DashboardRange, exerciseName?: string): Promise<Dashboard>;
 }
 
 export function createDashboardService(repository: FitLogRepository): DashboardService {
   return {
-    getDashboard(ownerEmail, range, exerciseName) {
-      const workouts = repository.listWorkouts(ownerEmail, range.from, range.to);
-      const meals = repository.listMeals(ownerEmail, range.from, range.to);
-      const measurements = repository.listMeasurements(ownerEmail, range.from, range.to);
+    async getDashboard(owner, range, exerciseName) {
+      const [workouts, meals, measurements] = await Promise.all([
+        repository.listWorkouts(owner, range.from, range.to),
+        repository.listMeals(owner, range.from, range.to),
+        repository.listMeasurements(owner, range.from, range.to)
+      ]);
       const workoutDates = [...new Set(workouts.map((workout) => workout.date))];
 
       return {

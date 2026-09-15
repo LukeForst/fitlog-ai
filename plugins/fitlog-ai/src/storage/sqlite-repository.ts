@@ -6,6 +6,7 @@ import type {
   BodyMeasurementInput,
   FitLogRepository,
   MemoryFactInput,
+  OwnerContext,
   StoredBodyMeasurement,
   StoredMeal,
   StoredMemoryFact,
@@ -40,8 +41,8 @@ class SqliteRepository implements FitLogRepository {
     this.initialize();
   }
 
-  saveWorkout(ownerEmail: string, workout: WorkoutInput): string {
-    this.assertAuthorized(ownerEmail);
+  async saveWorkout(owner: OwnerContext, workout: WorkoutInput): Promise<string> {
+    this.assertAuthorized(owner);
     const id = randomUUID();
     const createdAt = new Date().toISOString();
     this.database.exec("BEGIN IMMEDIATE");
@@ -70,8 +71,8 @@ class SqliteRepository implements FitLogRepository {
     }
   }
 
-  saveMeal(ownerEmail: string, meal: MealInput): string {
-    this.assertAuthorized(ownerEmail);
+  async saveMeal(owner: OwnerContext, meal: MealInput): Promise<string> {
+    this.assertAuthorized(owner);
     const id = randomUUID();
     this.database.prepare(
       "INSERT INTO meals (id, owner_id, date, meal_type, note, calories, protein_g, carbs_g, fat_g, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
@@ -79,8 +80,8 @@ class SqliteRepository implements FitLogRepository {
     return id;
   }
 
-  saveBodyMeasurement(ownerEmail: string, measurement: BodyMeasurementInput): string {
-    this.assertAuthorized(ownerEmail);
+  async saveBodyMeasurement(owner: OwnerContext, measurement: BodyMeasurementInput): Promise<string> {
+    this.assertAuthorized(owner);
     const id = randomUUID();
     this.database.prepare(
       "INSERT INTO body_measurements (id, owner_id, date, weight_kg, body_fat_percent, created_at) VALUES (?, ?, ?, ?, ?, ?)"
@@ -88,8 +89,8 @@ class SqliteRepository implements FitLogRepository {
     return id;
   }
 
-  saveMemoryFact(ownerEmail: string, fact: MemoryFactInput): string {
-    this.assertAuthorized(ownerEmail);
+  async saveMemoryFact(owner: OwnerContext, fact: MemoryFactInput): Promise<string> {
+    this.assertAuthorized(owner);
     const id = randomUUID();
     this.database.prepare(
       "INSERT INTO memory_facts (id, owner_id, content, category, is_important, created_at) VALUES (?, ?, ?, ?, ?, ?)"
@@ -97,8 +98,8 @@ class SqliteRepository implements FitLogRepository {
     return id;
   }
 
-  listWorkouts(ownerEmail: string, from: string, to: string): StoredWorkout[] {
-    this.assertAuthorized(ownerEmail);
+  async listWorkouts(owner: OwnerContext, from: string, to: string): Promise<StoredWorkout[]> {
+    this.assertAuthorized(owner);
     const workouts = this.database.prepare(
       "SELECT id, date, title, note, volume_kg AS volumeKg FROM workouts WHERE owner_id = ? AND date BETWEEN ? AND ? ORDER BY date DESC, created_at DESC"
     ).all(OWNER_ID, from, to) as unknown as WorkoutRow[];
@@ -123,24 +124,24 @@ class SqliteRepository implements FitLogRepository {
     }));
   }
 
-  listMeals(ownerEmail: string, from: string, to: string): StoredMeal[] {
-    this.assertAuthorized(ownerEmail);
+  async listMeals(owner: OwnerContext, from: string, to: string): Promise<StoredMeal[]> {
+    this.assertAuthorized(owner);
     const rows = this.database.prepare(
       "SELECT id, date, meal_type AS mealType, note, calories, protein_g AS proteinG, carbs_g AS carbsG, fat_g AS fatG FROM meals WHERE owner_id = ? AND date BETWEEN ? AND ? ORDER BY date DESC, created_at DESC"
     ).all(OWNER_ID, from, to) as unknown as MealRow[];
     return rows.map(({ note, ...meal }) => ({ ...meal, ...(note ? { note } : {}) }));
   }
 
-  listMeasurements(ownerEmail: string, from: string, to: string): StoredBodyMeasurement[] {
-    this.assertAuthorized(ownerEmail);
+  async listMeasurements(owner: OwnerContext, from: string, to: string): Promise<StoredBodyMeasurement[]> {
+    this.assertAuthorized(owner);
     const rows = this.database.prepare(
       "SELECT id, date, weight_kg AS weightKg, body_fat_percent AS bodyFatPercent FROM body_measurements WHERE owner_id = ? AND date BETWEEN ? AND ? ORDER BY date DESC, created_at DESC"
     ).all(OWNER_ID, from, to) as unknown as MeasurementRow[];
     return rows.map(({ bodyFatPercent, ...measurement }) => ({ ...measurement, ...(bodyFatPercent === null ? {} : { bodyFatPercent }) }));
   }
 
-  listMemoryFacts(ownerEmail: string): StoredMemoryFact[] {
-    this.assertAuthorized(ownerEmail);
+  async listMemoryFacts(owner: OwnerContext): Promise<StoredMemoryFact[]> {
+    this.assertAuthorized(owner);
     const rows = this.database.prepare(
       "SELECT id, content, category, is_important AS isImportant, created_at AS createdAt FROM memory_facts WHERE owner_id = ? ORDER BY created_at DESC"
     ).all(OWNER_ID) as unknown as FactRow[];
@@ -151,23 +152,23 @@ class SqliteRepository implements FitLogRepository {
     }));
   }
 
-  deleteMemoryFact(ownerEmail: string, id: string): boolean {
-    this.assertAuthorized(ownerEmail);
+  async deleteMemoryFact(owner: OwnerContext, id: string): Promise<boolean> {
+    this.assertAuthorized(owner);
     const result = this.database.prepare(
       "DELETE FROM memory_facts WHERE id = ? AND owner_id = ?"
     ).run(id, OWNER_ID);
     return result.changes > 0;
   }
 
-  writeAuditEvent(ownerEmail: string, action: string, metadata: Record<string, unknown> = {}, createdAt = new Date().toISOString()): void {
-    this.assertAuthorized(ownerEmail);
+  async writeAuditEvent(owner: OwnerContext, action: string, metadata: Record<string, unknown> = {}, createdAt = new Date().toISOString()): Promise<void> {
+    this.assertAuthorized(owner);
     this.database.prepare(
       "INSERT INTO audit_events (id, owner_id, action, metadata_json, created_at) VALUES (?, ?, ?, ?, ?)"
     ).run(randomUUID(), OWNER_ID, action, JSON.stringify(metadata), createdAt);
   }
 
-  purgeAuditEventsBefore(ownerEmail: string, cutoff: string): number {
-    this.assertAuthorized(ownerEmail);
+  async purgeAuditEventsBefore(owner: OwnerContext, cutoff: string): Promise<number> {
+    this.assertAuthorized(owner);
     this.database.exec("BEGIN IMMEDIATE");
     try {
       const result = this.database.prepare(
@@ -181,20 +182,20 @@ class SqliteRepository implements FitLogRepository {
     }
   }
 
-  countAuditEvents(ownerEmail: string): number {
-    this.assertAuthorized(ownerEmail);
+  async countAuditEvents(owner: OwnerContext): Promise<number> {
+    this.assertAuthorized(owner);
     const result = this.database.prepare(
       "SELECT COUNT(*) AS count FROM audit_events WHERE owner_id = ?"
     ).get(OWNER_ID) as unknown as { count: number };
     return result.count;
   }
 
-  close(): void {
+  async close(): Promise<void> {
     this.database.close();
   }
 
-  private assertAuthorized(email: string): void {
-    if (normalizeEmail(email) !== this.ownerEmail) {
+  private assertAuthorized(owner: OwnerContext): void {
+    if (normalizeEmail(owner.email) !== this.ownerEmail) {
       throw new Error("not authorized");
     }
   }

@@ -9,21 +9,24 @@ const workout: WorkoutInput = {
   exercises: [{ name: "深蹲", sets: [{ weightKg: 80, reps: 5 }] }]
 };
 
-test("stores and reloads a workout for the configured owner", () => {
+test("stores and reloads a workout for the same owner context", async () => {
   const repo = createSqliteRepository(":memory:", "me@example.com");
-  const id = repo.saveWorkout("me@example.com", workout);
+  const owner = { id: "fitlog-owner", email: "me@example.com" };
+  const id = await repo.saveWorkout(owner, workout);
 
-  assert.equal(repo.listWorkouts("me@example.com", "2026-09-14", "2026-09-14")[0]?.id, id);
-  assert.equal(repo.listWorkouts("me@example.com", "2026-09-14", "2026-09-14")[0]?.exercises[0]?.sets[0]?.reps, 5);
-  repo.close();
+  const workouts = await repo.listWorkouts(owner, "2026-09-14", "2026-09-14");
+  assert.equal(workouts[0]?.id, id);
+  assert.equal(workouts[0]?.exercises[0]?.sets[0]?.reps, 5);
+  await repo.close();
 });
 
-test("rejects a different email", () => {
+test("rejects a different owner context", async () => {
   const repo = createSqliteRepository(":memory:", "me@example.com");
+  const otherOwner = { id: "someone-else", email: "other@example.com" };
 
-  assert.throws(
-    () => repo.listWorkouts("other@example.com", "2026-09-14", "2026-09-14"),
+  await assert.rejects(
+    repo.listWorkouts(otherOwner, "2026-09-14", "2026-09-14"),
     /not authorized/
   );
-  repo.close();
+  await repo.close();
 });
