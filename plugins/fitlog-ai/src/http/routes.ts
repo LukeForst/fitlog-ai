@@ -14,6 +14,8 @@ export interface McpTransport {
 export interface HttpRequestHandlerConfig extends ProtectedResourceConfig {
   verifyIdentity: IdentityVerifier;
   transport: McpTransport;
+  publishableKey?: string;
+  consentHtml?: string;
 }
 
 function publicOrigin(publicUrl: string): string {
@@ -39,6 +41,11 @@ function sendJson(response: ServerResponse, status: number, payload: Record<stri
   response.end(JSON.stringify(payload));
 }
 
+function sendHtml(response: ServerResponse, html: string): void {
+  response.writeHead(200, { "content-type": "text/html; charset=utf-8" });
+  response.end(html);
+}
+
 function bearerToken(request: IncomingMessage): string | undefined {
   const value = request.headers.authorization;
   if (!value) return undefined;
@@ -56,6 +63,22 @@ export function createHttpRequestHandler(config: HttpRequestHandlerConfig): (req
     }
     if (pathname === "/.well-known/oauth-protected-resource") {
       sendJson(response, 200, protectedResourceMetadata(config));
+      return;
+    }
+    if (pathname === "/oauth/consent") {
+      if (!config.consentHtml) {
+        sendJson(response, 404, { error: "not found" });
+        return;
+      }
+      sendHtml(response, config.consentHtml);
+      return;
+    }
+    if (pathname === "/oauth/consent-config") {
+      if (!config.publishableKey) {
+        sendJson(response, 404, { error: "not found" });
+        return;
+      }
+      sendJson(response, 200, { supabaseUrl: config.supabaseUrl, publishableKey: config.publishableKey });
       return;
     }
     if (pathname !== "/mcp") {

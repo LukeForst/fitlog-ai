@@ -60,3 +60,28 @@ test("serves health and protected-resource metadata without authentication", asy
     assert.equal((await metadata.json()).resource, "https://fitlog.example/mcp");
   });
 });
+
+test("serves the OAuth consent page and its public browser configuration", async () => {
+  const handler = createHttpRequestHandler({
+    publicUrl: "https://fitlog.example",
+    supabaseUrl: "https://dxgsfassloqunvvubkgu.supabase.co",
+    publishableKey: "publishable-test",
+    consentHtml: "<main data-authorization-id>authorization_id</main>",
+    verifyIdentity: createIdentityVerifier({ allowedEmail: "me@example.com", getUser: async () => null }),
+    transport: { handleRequest: async (_request, response) => response.end() }
+  });
+
+  await withServer(handler, async (url) => {
+    const consent = await fetch(`${url}/oauth/consent?authorization_id=auth-1`);
+    assert.equal(consent.status, 200);
+    assert.match(consent.headers.get("content-type") ?? "", /text\/html/);
+    const html = await consent.text();
+    assert.match(html, /authorization_id/);
+    assert.doesNotMatch(html, /service[_-]?role/i);
+    const config = await fetch(`${url}/oauth/consent-config`);
+    assert.deepEqual(await config.json(), {
+      supabaseUrl: "https://dxgsfassloqunvvubkgu.supabase.co",
+      publishableKey: "publishable-test"
+    });
+  });
+});
