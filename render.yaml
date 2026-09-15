@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: fitlog-ai
+    runtime: node
+    plan: free
+    rootDir: plugins/fitlog-ai
+    buildCommand: npm ci && npm run check && npm run build
+    startCommand: npm run start
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: FITLOG_RUNTIME
+        value: cloud
+      - key: FITLOG_PUBLIC_URL
+        sync: false
+      - key: FITLOG_ALLOWED_EMAIL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_PUBLISHABLE_KEY
+        sync: false
