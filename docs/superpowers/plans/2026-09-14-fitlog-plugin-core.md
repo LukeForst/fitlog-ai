@@ -6,7 +6,7 @@
 
 **Architecture:** The existing static demo remains untouched. A new plugins/fitlog-ai TypeScript package separates domain validation, SQLite persistence, service logic, MCP tool registration, and an MCP Apps dashboard. The package uses one fixed local owner identity in developer mode; the production cloud, OAuth, and object-storage work stays in a separately scoped deployment plan because it requires user-owned accounts and credentials.
 
-**Tech Stack:** Node.js 22, TypeScript strict mode, node:test, @modelcontextprotocol/sdk, zod, better-sqlite3, Vite, vanilla TypeScript, CSS.
+**Tech Stack:** Node.js 24, TypeScript strict mode, node:test, @modelcontextprotocol/sdk, zod, node:sqlite, Vite, vanilla TypeScript, CSS.
 
 **Spec:** docs/superpowers/specs/2026-09-14-fitlog-chatgpt-plugin-design.md
 
@@ -43,7 +43,7 @@
 - Create: plugins/fitlog-ai/.mcp.json
 - Create: plugins/fitlog-ai/package.json
 - Create: plugins/fitlog-ai/tsconfig.json
-- Create: plugins/fitlog-ai/tests/package.test.ts
+- Create: plugins/fitlog-ai/tests/package.test.mjs
 
 **Interfaces:**
 - Produces npm test, npm run check, npm run build, and npm run start.
@@ -57,7 +57,7 @@ Run from the plugin-creator skill directory:
 
 - [ ] **Step 2: Write the failing metadata test.**
 
-Create tests/package.test.ts:
+Create tests/package.test.mjs:
 
     import test from 'node:test';
     import assert from 'node:assert/strict';
@@ -72,19 +72,19 @@ Create tests/package.test.ts:
 
 - [ ] **Step 3: Verify red.**
 
-Run: npm run test:one -- tests/package.test.ts
+Run: node --test tests/package.test.mjs
 
 Expected: failure because the test command or fitlog MCP declaration is missing.
 
 - [ ] **Step 4: Add minimal configuration.**
 
-Set scripts to npm test = tsx --test tests/*.test.ts, npm run test:one = tsx --test, npm run check = tsc --noEmit, npm run build = vite build, and npm run start = tsx src/index.ts. Set .mcp.json with one HTTP server named fitlog at the endpoint above. Set the manifest name to fitlog-ai with a Chinese description and reference .mcp.json. Do not create a marketplace entry.
+Set scripts to npm test = node --test tests/*.test.mjs, npm run test:ts = tsx --test tests/*.test.ts, npm run check = tsc --noEmit, npm run build = vite build, and npm run start = tsx src/index.ts. Set .mcp.json with one HTTP server named fitlog at the endpoint above. Set the manifest name to fitlog-ai with a Chinese description and reference .mcp.json. Do not create a marketplace entry.
 
 - [ ] **Step 5: Verify green and commit.**
 
 Run:
 
-    npm run test:one -- tests/package.test.ts
+    node --test tests/package.test.mjs
     npm run check
     python "C:/Users/LYL19/.codex/skills/.system/plugin-creator/scripts/validate_plugin.py" .
     git add plugins/fitlog-ai
@@ -190,7 +190,7 @@ Expected: module-not-found failure for sqlite-repository.
 
 - [ ] **Step 3: Implement the repository.**
 
-Use better-sqlite3 with foreign keys on. Initialize users, workouts, exercises, workout_sets, meals, body_measurements, memory_facts, and audit_events in one transaction. Resolve the configured owner at startup. Bind all queries to this owner ID after checking the owner email; never accept user ID as a model or tool parameter.
+Use Node's built-in node:sqlite module with foreign keys on. Initialize users, workouts, exercises, workout_sets, meals, body_measurements, memory_facts, and audit_events in one transaction. Resolve the configured owner at startup. Bind all queries to this owner ID after checking the owner email; never accept user ID as a model or tool parameter.
 
 - [ ] **Step 4: Verify green and commit.**
 

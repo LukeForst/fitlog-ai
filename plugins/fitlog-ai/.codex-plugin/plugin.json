@@ -1,0 +1,20 @@
+{
+  "name": "fitlog-ai",
+  "version": "0.1.0",
+  "description": "在 ChatGPT 中记录训练和饮食，并查看个人健身数据。",
+  "author": {
+    "name": "Local developer"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "FitLog AI",
+    "shortDescription": "记录训练、饮食和身体数据。",
+    "longDescription": "在 ChatGPT 中记录训练、饮食和身体数据，并查看个人健身趋势。",
+    "developerName": "Local developer",
+    "category": "Productivity",
+    "capabilities": [],
+    "defaultPrompt": "帮我记录今天的训练和饮食，并展示本周总结。"
+  },
+  "mcpServers": "./.mcp.json",
+  "apps": "./.app.json"
+}
