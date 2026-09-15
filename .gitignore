@@ -3,3 +3,4 @@ plugins/fitlog-ai/node_modules/
 plugins/fitlog-ai/.npm-cache/
 plugins/fitlog-ai/.node-gyp/
 plugins/fitlog-ai/.plugin-tools/
+plugins/fitlog-ai/dist/

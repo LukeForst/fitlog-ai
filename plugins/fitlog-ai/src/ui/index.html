@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>FitLog AI</title>
+    <style>
+      :root{color:#1d2a25;background:#f5f4ee;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}body{margin:0}main{padding:16px;max-width:720px;margin:0 auto}h1{font-size:22px;margin:0 0 4px}.subtitle,span{color:#65736d;font-size:13px}.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:16px 0}.cards article,.trend,.recent{background:#fff;border:1px solid #e2e5de;border-radius:14px;padding:14px}.cards strong{display:block;font-size:20px;margin-top:6px}.trend,.recent{margin-top:12px}h2{font-size:15px;margin:0 0 8px}svg{width:100%;height:120px}.recent p{border-top:1px solid #edf0eb;font-size:14px;margin:0;padding:10px 0}:focus-visible{outline:3px solid #2f7d64;outline-offset:3px}@media(max-width:640px){.cards{grid-template-columns:1fr}main{padding:12px}}
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>FitLog AI</h1>
+      <p class="subtitle">等待仪表盘数据</p>
+      <div id="dashboard" aria-live="polite"></div>
+    </main>
+    <script>
+      (() => {
+        const root = document.getElementById("dashboard");
+        const subtitle = document.querySelector(".subtitle");
+        const render = (dashboard) => {
+          if (!dashboard || !dashboard.nutrition) return;
+          subtitle.textContent = `${dashboard.trainingDays || 0} 天训练 · 连续 ${dashboard.streakDays || 0} 天`;
+          root.replaceChildren();
+          const cards = document.createElement("section"); cards.className = "cards";
+          [["热量", `${dashboard.nutrition.calories} kcal`], ["蛋白质", `${dashboard.nutrition.proteinG} g`], ["碳水", `${dashboard.nutrition.carbsG} g`], ["脂肪", `${dashboard.nutrition.fatG} g`], ["本周训练量", `${dashboard.weeklyVolumeKg} kg`]].forEach(([label, value]) => { const card = document.createElement("article"), name = document.createElement("span"), amount = document.createElement("strong"); name.textContent = label; amount.textContent = value; card.append(name, amount); cards.append(card); });
+          const recent = document.createElement("section"); recent.className = "recent"; const title = document.createElement("h2"); title.textContent = "最近训练"; recent.append(title); (dashboard.recentWorkouts || []).forEach((workout) => { const row = document.createElement("p"); row.textContent = `${workout.date} · ${workout.title} · ${workout.volumeKg} kg`; recent.append(row); });
+          root.append(cards, recent);
+        };
+        window.addEventListener("message", (event) => {
+          const message = event.data || {};
+          if (message.method === "ui/initialize") render(message.params?.toolResult?.structuredContent || message.params?.structuredContent);
+          if (message.method === "ui/notifications/tool-result") render(message.params?.structuredContent);
+        });
+      })();
+    </script>
+  </body>
+</html>
