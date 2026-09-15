@@ -1,12 +1,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { readFileSync } from "node:fs";
-import type { FitLogRepository } from "../storage/repository.ts";
-import { registerFitlogTools } from "./tools.ts";
+import { registerFitlogTools, type FitlogToolDependencies } from "./tools.ts";
 
-export interface FitlogServerOptions {
-  ownerEmail: string;
-  repository: FitLogRepository;
-}
+export type FitlogServerOptions = FitlogToolDependencies;
 
 export function createFitlogServer(options: FitlogServerOptions): McpServer {
   const server = new McpServer({ name: "fitlog-ai", version: "0.1.0" });

@@ -16,7 +16,11 @@ const repository = createSqliteRepository(databasePath, ownerEmail);
 const owner = { id: "fitlog-owner", email: ownerEmail };
 await runRetention(repository, owner, new Date());
 
-const mcpServer = createFitlogServer({ ownerEmail, repository });
+const mcpServer = createFitlogServer({
+  mode: "local",
+  localOwner: owner,
+  repositoryFactory: { forOwner: () => repository }
+});
 const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
 await mcpServer.connect(transport);
 
