@@ -4,7 +4,7 @@ services:
     runtime: node
     plan: free
     rootDir: plugins/fitlog-ai
-    buildCommand: npm ci && npm run check && npm run build
+    buildCommand: npm ci --include=dev && npm run check && npm run build
     startCommand: npm run start
     healthCheckPath: /healthz
     envVars:
