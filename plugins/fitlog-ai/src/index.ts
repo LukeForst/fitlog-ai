@@ -1,5 +1,8 @@
 import { createServer } from "node:http";
 import { readFileSync } from "node:fs";
+import { readFile } from "node:fs/promises";
+import { basename, extname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { createHttpRequestHandler } from "./http/routes.ts";
 import { createSupabaseIdentityVerifier } from "./auth/identity.ts";
@@ -12,6 +15,35 @@ function required(name: string): string {
   const value = process.env[name]?.trim();
   if (!value) throw new Error("Missing required configuration: " + name);
   return value;
+}
+
+function assetContentType(assetName: string): string {
+  switch (extname(assetName)) {
+    case ".js": return "text/javascript; charset=utf-8";
+    case ".css": return "text/css; charset=utf-8";
+    case ".svg": return "image/svg+xml";
+    default: return "application/octet-stream";
+  }
+}
+
+async function serveAsset(requestUrl: string | undefined, response: import("node:http").ServerResponse, assetDirectory: string): Promise<boolean> {
+  const pathname = new URL(requestUrl ?? "/", "http://fitlog.local").pathname;
+  if (!pathname.startsWith("/assets/")) return false;
+  const assetName = pathname.slice("/assets/".length);
+  if (!assetName || basename(assetName) !== assetName) {
+    response.writeHead(404, { "content-type": "application/json" });
+    response.end(JSON.stringify({ error: "not found" }));
+    return true;
+  }
+  try {
+    const contents = await readFile(join(assetDirectory, assetName));
+    response.writeHead(200, { "content-type": assetContentType(assetName), "cache-control": "public, max-age=31536000, immutable" });
+    response.end(contents);
+  } catch {
+    response.writeHead(404, { "content-type": "application/json" });
+    response.end(JSON.stringify({ error: "not found" }));
+  }
+  return true;
 }
 
 async function startLocal(): Promise<void> {
@@ -43,7 +75,12 @@ async function startCloud(): Promise<void> {
   const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
   await mcpServer.connect(transport);
   const consentHtml = readFileSync(new URL("../dist/src/auth/consent.html", import.meta.url), "utf8");
-  const httpServer = createServer(createHttpRequestHandler({ publicUrl, supabaseUrl, publishableKey, consentHtml, verifyIdentity: createSupabaseIdentityVerifier({ allowedEmail, url: supabaseUrl, publishableKey }), transport }));
+  const assetDirectory = fileURLToPath(new URL("../dist/assets/", import.meta.url));
+  const requestHandler = createHttpRequestHandler({ publicUrl, supabaseUrl, publishableKey, consentHtml, verifyIdentity: createSupabaseIdentityVerifier({ allowedEmail, url: supabaseUrl, publishableKey }), transport });
+  const httpServer = createServer(async (request, response) => {
+    if (await serveAsset(request.url, response, assetDirectory)) return;
+    await requestHandler(request, response);
+  });
   listen(httpServer, "cloud");
 }
 
