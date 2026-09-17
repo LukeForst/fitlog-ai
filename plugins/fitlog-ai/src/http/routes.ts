@@ -42,7 +42,7 @@ function sendJson(response: ServerResponse, status: number, payload: Record<stri
 }
 
 function sendHtml(response: ServerResponse, html: string): void {
-  response.writeHead(200, { "content-type": "text/html; charset=utf-8" });
+  response.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" });
   response.end(html);
 }
 

@@ -75,6 +75,7 @@ test("serves the OAuth consent page and its public browser configuration", async
     const consent = await fetch(`${url}/oauth/consent?authorization_id=auth-1`);
     assert.equal(consent.status, 200);
     assert.match(consent.headers.get("content-type") ?? "", /text\/html/);
+    assert.equal(consent.headers.get("cache-control"), "no-store");
     const html = await consent.text();
     assert.match(html, /authorization_id/);
     assert.doesNotMatch(html, /service[_-]?role/i);
