@@ -37,6 +37,10 @@ async function bootstrap(): Promise<void> {
   }
   const { data, error: detailsError } = await supabase.auth.oauth.getAuthorizationDetails(authorizationId);
   if (detailsError || !data) { showError("授权请求已失效，请返回 ChatGPT 后重新连接。"); return; }
+  if ("redirect_url" in data) {
+    location.assign(data.redirect_url);
+    return;
+  }
   const details = data as AuthorizationDetails;
   message.textContent = "请确认 ChatGPT 请求访问你的个人健身数据。";
   detail.replaceChildren();
